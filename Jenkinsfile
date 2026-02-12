@@ -8,39 +8,40 @@ pipeline {
                 labels:
                     app: camunda-doc-gen-backend-build
                 spec:
-                containers:
-                - name: maven
-                    image: maven:3.9.6-eclipse-temurin-21
-                    command:
-                    - cat
-                    tty: true
-                - name: docker
-                    image: docker:24-dind
-                    securityContext:
-                    privileged: true
-                    env:
-                    - name: DOCKER_TLS_CERTDIR
-                    value: ""
-                    volumeMounts:
+                    containers:
+                    - name: maven
+                      image: maven:3.9.6-eclipse-temurin-21
+                      command:
+                      - cat
+                      tty: true
+                    - name: docker
+                      image: docker:24-dind
+                      securityContext:
+                        privileged: true
+                      env:
+                      - name: DOCKER_TLS_CERTDIR
+                        value: ""
+                      volumeMounts:
+                      - name: docker-config
+                        mountPath: /root/.docker/
+                      command:
+                      - dockerd-entrypoint.sh
+                      tty: true
+                    volumes:
                     - name: docker-config
-                      mountPath: /root/.docker/
-                    command:
-                    - dockerd-entrypoint.sh
-                    tty: true
-                volumes:
-                - name: docker-config
-                  secret:
-                    secretName: dockerhub-secret
-                    items:
-                      - key: .dockerconfigjson
-                        path: config.json
+                      secret:
+                        secretName: dockerhub-secret
+                        items:
+                        - key: .dockerconfigjson
+                          path: config.json
                 '''
         }
     }
 
     environment {
         DOCKER_IMAGE = 'camunda-doc-gen-backend'
-        DOCKER_REPO = 'abdos/camunda-doc-gen-backend'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        DOCKER_REPO = 'abdosblz/camunda-doc-gen-backend'
     }
 
     stages {
