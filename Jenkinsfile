@@ -23,11 +23,16 @@ pipeline {
                         value: ""
                       volumeMounts:
                       - name: docker-config
+                        mountPath: /docker-secret
+                        readOnly: true
+                      - name: docker-home
                         mountPath: /root/.docker/
                       command:
                       - dockerd-entrypoint.sh
                       tty: true
                     volumes:
+                    - name: docker-home
+                      emptyDir: {}
                     - name: docker-config
                       secret:
                         secretName: dockerhub-secret
@@ -40,7 +45,6 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'camunda-doc-gen-backend'
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_REPO = 'abdosblz/camunda-doc-gen-backend'
     }
 
@@ -74,8 +78,9 @@ pipeline {
             steps {
                 container('docker') {
                     script {
+                        sh "mkdir -p /root/.docker"
+                        sh  "cp /docker-secret/config.json /root/.docker/config.json"
                         sh "docker push ${DOCKER_REPO}:${DOCKER_TAG}"
-                        sh "docker push ${DOCKER_REPO}:latest"
                     }
                 }
             }
